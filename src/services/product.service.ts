@@ -2,24 +2,27 @@ import ProductModel, {
   ProductInputtableTypes,
   ProductSequelizeModel,
 } from '../database/models/product.model';
-import validateProducts from '../middlewares/validate';
+import validateProducts from '../middlewares/validateProducts';
 import { Product } from '../types/Product';
 import { ServiceResponse } from '../types/ServiceResponse';
 
+let serviceResponse: ServiceResponse<Product>;
 const createProduct = async (body: ProductInputtableTypes): 
 Promise<ServiceResponse<Product>> => {
-  let serviceResponse: ServiceResponse<Product>;
-
-  const error = validateProducts.products(body);
-  const message = 'Corpo da requisição inválido';
-  if (error) {
-    serviceResponse = { status: 'INVALID_DATA', data: { message } };
+  const errorNull = validateProducts.nullBody(body);
+  if (errorNull) {
+    serviceResponse = { status: 'INVALID_DATA', data: { message: errorNull } };
     return serviceResponse;
   }
-
-  const newProduct = await ProductModel.create(body);
-  serviceResponse = { status: 'SUCCESSFUL', data: newProduct.dataValues };
-
+  const errorType = validateProducts.type(body);
+  if (errorType) serviceResponse = { status: 'INVALID_INPUT', data: { message: errorType } };
+  const errorLength = validateProducts.inputLength(body);
+  if (errorLength) serviceResponse = { status: 'INVALID_INPUT', data: { message: errorLength } };
+  const errors = [errorNull, errorType, errorLength].every((e) => e === undefined);
+  if (errors) {
+    const newProduct = await ProductModel.create(body);
+    serviceResponse = { status: 'SUCCESSFUL', data: newProduct.dataValues };
+  }
   return serviceResponse;
 };
 

@@ -42,7 +42,6 @@ describe('POST /login', function () {
     //Act
     const httpResponse = await chai.request(app).post('/login').send(httpBodyRequest)
     // Assert
-    console.log('oii',mockFindeOneReturn.dataValues)
     expect(httpResponse.status).to.equal(200)
     expect(httpResponse.body).to.have.key('token')    
   });
